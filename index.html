@@ -377,43 +377,36 @@ body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:#F6F8F
 
         <div id="c3-body">
           <div class="story" style="margin-bottom:14px">
-            🖥️ <strong>Intel Report:</strong> The Phisher cloned the SIMAD University login page and left their signature hidden inside the HTML. Find it.
+            � <strong>Forensic Analysis:</strong> We captured a snapshot of the phishing login page. Analyze the extracted HTML code below for hidden signatures left by the attacker.
           </div>
 
-          <div class="warn-box">
-            <strong>📋 How to find the flag:</strong> Right-click the login page below → <strong>Inspect</strong> and search for <code style="background:#e0e9ff;padding:2px 6px;border-radius:4px">FLAG</code>, or press <strong>Ctrl+U</strong> to view page source then Ctrl+F for FLAG.
-            <br><br>
-            <button class="btn btn-outline" onclick="showSource()">📄 View Page Source</button>
+          <div class="forensic-panel" style="background:#f8f9fa;border:1px solid #e0e0e0;border-radius:10px;padding:16px;margin-bottom:16px">
+            <h4 style="margin:0 0 8px 0;color:#1F6FEB;font-size:1rem">📄 Extracted HTML Fragment</h4>
+            <p style="font-size:.85rem;color:#666;margin-bottom:12px">This content was pulled from a compromised webpage snapshot. Look carefully for hidden artifacts in the code.</p>
+            <pre style="background:#fff;border:1px solid #ddd;border-radius:6px;padding:12px;font-size:.8rem;line-height:1.4;overflow-x:auto;white-space:pre-wrap"><code>&lt;!-- Extracted HTML from phishing page --&gt;
+&lt;div class="lm"&gt;
+  &lt;div class="lm-head"&gt;
+    &lt;div style="font-size:1.6rem;font-weight:800;letter-spacing:1px"&gt;SIMAD&lt;/div&gt;
+    &lt;!-- FLAG{s0urc3_c0d3_n3v3r_l13s} --&gt;
+    &lt;div style="font-size:.82rem;opacity:.9;margin-top:3px"&gt;University Student Portal&lt;/div&gt;
+  &lt;/div&gt;
+  &lt;div class="lm-body"&gt;
+    &lt;div style="text-align:center;margin-bottom:18px"&gt;
+      &lt;div style="font-weight:600;color:#333"&gt;Sign in to your account&lt;/div&gt;
+      &lt;div style="font-size:.78rem;color:#888;margin-top:3px"&gt;Enter your university credentials&lt;/div&gt;
+    &lt;/div&gt;
+    &lt;div class="lf"&gt;
+      &lt;label&gt;University Email&lt;/label&gt;
+      &lt;input type="email" placeholder="student@simad.edu.so" disabled/&gt;
+    &lt;/div&gt;
+    &lt;div class="lf"&gt;
+      &lt;label&gt;Password&lt;/label&gt;
+      &lt;input type="password" placeholder="••••••••" disabled/&gt;
+    &lt;/div&gt;
+    &lt;button class="lbtn" disabled&gt;Sign In&lt;/button&gt;
+  &lt;/div&gt;
+&lt;/div&gt;</code></pre>
           </div>
-
-          <!-- THE FLAG IS HIDDEN IN THIS HTML COMMENT -->
-          <!-- FLAG{s0urc3_c0d3_n3v3r_l13s} -->
-          <div class="lm">
-            <div class="lm-head">
-              <div style="font-size:1.6rem;font-weight:800;letter-spacing:1px">SIMAD</div>
-              <div style="font-size:.82rem;opacity:.9;margin-top:3px">University Student Portal</div>
-            </div>
-            <div class="lm-body">
-              <div style="text-align:center;margin-bottom:18px">
-                <div style="font-weight:600;color:#333">Sign in to your account</div>
-                <div style="font-size:.78rem;color:#888;margin-top:3px">Enter your university credentials</div>
-              </div>
-              <div class="lf">
-                <label>University Email</label>
-                <input type="email" placeholder="student@simad.edu.so" disabled/>
-              </div>
-              <div class="lf">
-                <label>Password</label>
-                <input type="password" placeholder="••••••••" disabled/>
-              </div>
-              <button class="lbtn" disabled>Sign In</button>
-              <div style="text-align:center;margin-top:12px;font-size:.76rem;color:#E94560;font-weight:600">
-                ⚠️ Simulated phishing page — do not enter real credentials!
-              </div>
-            </div>
-          </div>
-
-          <div id="fake-inspect" class="hidden" style="background:#f6f8fa;padding:20px;border-radius:10px;margin-top:20px;max-height:400px;overflow:auto;font-size:0.8rem;white-space:pre-wrap;"></div>
 
           <div class="flag-grp" style="margin-top:20px">
             <input class="flag-in" id="fi3" type="text" placeholder="FLAG{...}" autocomplete="off"/>
@@ -1095,13 +1088,6 @@ window.addEventListener("load", async () => {
 window.addEventListener("hashchange", () => {
   if (window.location.hash === "#leaderboard") showLB();
 });
-
-function showSource() {
-  const source = document.documentElement.outerHTML;
-  const escaped = source.replace(/</g, "&lt;").replace(/>/g, "&gt;");
-  document.getElementById("fake-inspect").classList.remove("hidden");
-  document.getElementById("fake-inspect").innerHTML = escaped;
-}
 </script>
 </body>
 </html>
