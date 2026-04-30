@@ -131,11 +131,43 @@ body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:#F6F8F
 /* HIDDEN */
 .hidden{display:none!important}
 /* RESPONSIVE */
-@media(max-width:600px){
-  .site-header h1{font-size:1.4rem}.timer{font-size:1.5rem}
-  .verdict-btns{flex-direction:column}.flag-grp{flex-direction:column}
-  .rot13-grid{grid-template-columns:repeat(7,1fr)}
-  .ch-title{gap:8px}.ch-pts{margin-left:0;width:100%}
+@media(max-width:768px){
+  .site-header{padding:14px 16px}
+  .site-header h1{font-size:1.6rem}
+  .site-header .sub{font-size:.85rem}
+  .timer-wrap{padding:6px 16px;margin-top:8px}
+  .timer{font-size:1.6rem}
+  .wrap{padding:16px 12px}
+  .card{padding:18px}
+  .start-inner h2{font-size:1.2rem}
+  .name-in{width:100%;max-width:320px}
+  .story{font-size:.9rem;padding:12px 16px}
+  .score-table{min-width:520px;overflow-x:auto;display:block}
+  .ch-title{flex-direction:column;gap:8px}
+  .ch-pts{margin-left:0;font-size:.8rem}
+  .email-mock{margin:10px 0}
+  .verdict-btns{flex-direction:column}
+  .flag-grp{flex-direction:column}
+  .rot13-grid{grid-template-columns:repeat(7,1fr);font-size:.7rem}
+  .lm{max-width:100%}
+}
+@media(max-width:480px){
+  .site-header h1{font-size:1.3rem}
+  .timer{font-size:1.4rem}
+  .card{padding:14px}
+  .btn{padding:10px 18px;font-size:.9rem}
+  .start-inner h2{font-size:1.1rem}
+  .story{font-size:.85rem}
+  .score-table th,.score-table td{padding:8px 10px;font-size:.8rem}
+  .ch-badge{font-size:.75rem}
+  .email-head{padding:10px 14px}
+  .email-body{padding:14px;font-size:.88rem}
+  .vbtn{padding:10px;font-size:.9rem}
+  .rf-item{font-size:.85rem}
+  .flag-in{font-size:.9rem}
+  .enc-text{font-size:1rem;padding:10px 16px}
+  .lm-head{padding:16px}
+  .lm-body{padding:16px}
 }
 </style>
 </head>
@@ -350,6 +382,8 @@ body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:#F6F8F
 
           <div class="warn-box">
             <strong>📋 How to find the flag:</strong> Right-click the login page below → <strong>Inspect</strong> and search for <code style="background:#e0e9ff;padding:2px 6px;border-radius:4px">FLAG</code>, or press <strong>Ctrl+U</strong> to view page source then Ctrl+F for FLAG.
+            <br><br>
+            <button class="btn btn-outline" onclick="showSource()">📄 View Page Source</button>
           </div>
 
           <!-- THE FLAG IS HIDDEN IN THIS HTML COMMENT -->
@@ -378,6 +412,8 @@ body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:#F6F8F
               </div>
             </div>
           </div>
+
+          <div id="fake-inspect" class="hidden" style="background:#f6f8fa;padding:20px;border-radius:10px;margin-top:20px;max-height:400px;overflow:auto;font-size:0.8rem;white-space:pre-wrap;"></div>
 
           <div class="flag-grp" style="margin-top:20px">
             <input class="flag-in" id="fi3" type="text" placeholder="FLAG{...}" autocomplete="off"/>
@@ -1059,6 +1095,13 @@ window.addEventListener("load", async () => {
 window.addEventListener("hashchange", () => {
   if (window.location.hash === "#leaderboard") showLB();
 });
+
+function showSource() {
+  const source = document.documentElement.outerHTML;
+  const escaped = source.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  document.getElementById("fake-inspect").classList.remove("hidden");
+  document.getElementById("fake-inspect").innerHTML = escaped;
+}
 </script>
 </body>
 </html>
