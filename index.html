@@ -634,6 +634,53 @@ async function refreshRemoteLB() {
   return remoteLB;
 }
 
+function clearLocalSession() {
+  S = {
+    name: "",
+    timerSec: 45 * 60,
+    emailIdx: 0,
+    verdicts: {},
+    checkedFlags: {},
+    c1Submitted: false,
+    c1Score: 0,
+    c2Solved: false,
+    c3Solved: false,
+    c4Solved: false,
+    startTime: null,
+    finishTime: null
+  };
+  localStorage.removeItem("ctf_s");
+  localStorage.removeItem("ctf_lb");
+  remoteLB = {};
+  document.getElementById("student-name").value = "";
+  document.getElementById("name-err").style.display = "none";
+  document.getElementById("start-card").style.display = "block";
+  document.getElementById("ctf-content").classList.add("hidden");
+  document.getElementById("congrats").style.display = "none";
+  setSyncStatus("Session reset after remote data deletion", true);
+}
+
+async function ensureRemoteRowExists() {
+  if (!sbReady || !S.name || !sbUser) return true;
+  const { data, error } = await sb
+    .from(SUPABASE_TABLE)
+    .select("user_id")
+    .eq("user_id", sbUser.id)
+    .maybeSingle();
+
+  if (error) {
+    console.error("Remote check error:", error);
+    return true;
+  }
+
+  if (!data) {
+    clearLocalSession();
+    return false;
+  }
+
+  return true;
+}
+
 // ──────────────────────────────────────────────────────────────
 // EMAIL DATA
 // ──────────────────────────────────────────────────────────────
@@ -1024,7 +1071,12 @@ function hideLB() {
 async function doRefreshLB() {
   lbSec = 10;
   document.getElementById("ref-ind").textContent = "Auto-refreshes in 10s";
-  if (sbReady) await refreshRemoteLB();
+  if (sbReady) {
+    await refreshRemoteLB();
+    if (S.name && !await ensureRemoteRowExists()) {
+      return;
+    }
+  }
   const lb = getLB();
   const rows = Object.values(lb).sort((a,b) => {
     if (b.total !== a.total) return b.total - a.total;
@@ -1071,6 +1123,10 @@ window.addEventListener("load", async () => {
   if (window.location.hash === "#leaderboard") { showLB(); return; }
 
   if (loadS() && S.name) {
+    if (sbReady && !await ensureRemoteRowExists()) {
+      return;
+    }
+
     document.getElementById("student-name").value = S.name;
     document.getElementById("start-card").style.display = "none";
     document.getElementById("ctf-content").classList.remove("hidden");
