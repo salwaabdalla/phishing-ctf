@@ -1,0 +1,1064 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Operation: Catch The Phisher — SIMAD University CTF</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:#F6F8FA;color:#1a1a2e;min-height:100vh}
+/* HEADER */
+.site-header{background:#fff;border-bottom:3px solid #E94560;padding:18px 20px;text-align:center;box-shadow:0 2px 10px rgba(0,0,0,.07)}
+.site-header h1{font-size:2rem;color:#1a1a2e;letter-spacing:-.5px}
+.site-header .sub{color:#1F6FEB;font-size:.95rem;font-weight:600;margin-top:4px}
+.timer-wrap{display:inline-flex;align-items:center;gap:10px;background:#F6F8FA;border:2px solid #e0e0e0;border-radius:12px;padding:8px 22px;margin-top:12px}
+.timer{font-size:2rem;font-weight:700;font-family:'Courier New',monospace;color:#1a1a2e;transition:color .3s}
+.timer.warn{color:#FF8C00}
+.timer.danger{color:#E94560}
+/* LAYOUT */
+.wrap{max-width:920px;margin:0 auto;padding:20px 16px}
+/* CARD */
+.card{background:#fff;border-radius:14px;padding:24px;margin-bottom:20px;box-shadow:0 2px 14px rgba(0,0,0,.06)}
+/* BUTTONS */
+.btn{padding:11px 24px;border:none;border-radius:10px;font-size:.95rem;font-weight:600;cursor:pointer;transition:all .2s;display:inline-flex;align-items:center;gap:6px}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn-blue{background:#1F6FEB;color:#fff}.btn-blue:hover:not(:disabled){background:#1558cc;transform:translateY(-1px)}
+.btn-red{background:#E94560;color:#fff}.btn-red:hover:not(:disabled){background:#c73450}
+.btn-outline{background:#fff;border:2px solid #1F6FEB;color:#1F6FEB}.btn-outline:hover:not(:disabled){background:#f0f5ff}
+/* START CARD */
+.start-inner{text-align:center}
+.start-inner h2{font-size:1.4rem;margin-bottom:16px;color:#1a1a2e}
+.start-row{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+.name-in{padding:13px 18px;border:2px solid #e0e0e0;border-radius:10px;font-size:1rem;width:320px;outline:none;transition:border-color .2s}
+.name-in:focus{border-color:#1F6FEB}
+.err-msg{color:#E94560;font-size:.85rem;margin-top:8px;display:none}
+/* STORY */
+.story{background:linear-gradient(135deg,#fff5f7,#f0f4ff);border-left:4px solid #E94560;padding:16px 20px;border-radius:8px;font-style:italic;color:#444;line-height:1.7;font-size:.95rem}
+/* PROGRESS */
+.prog-row{display:flex;justify-content:space-between;font-size:.85rem;color:#666;margin-bottom:6px}
+.prog-bg{background:#e0e0e0;border-radius:10px;height:10px;overflow:hidden}
+.prog-fill{background:linear-gradient(90deg,#1F6FEB,#E94560);height:100%;border-radius:10px;transition:width .5s ease;width:0%}
+/* SCOREBOARD STRIP */
+.score-table{width:100%;border-collapse:collapse;min-width:520px}
+.score-table th{background:#1F6FEB;color:#fff;padding:10px 14px;text-align:center;font-size:.82rem}
+.score-table td{padding:10px 14px;text-align:center;border-bottom:1px solid #f0f0f0;font-size:.9rem}
+.badge{display:inline-block;padding:3px 11px;border-radius:20px;font-weight:600;font-size:.82rem}
+.badge-earn{background:#e6f4ea;color:#1e7e34}
+.badge-pend{background:#f5f5f5;color:#999}
+/* CHALLENGE CARDS */
+.ch-card{border-left:5px solid #ccc}
+.ch-card.c1{border-left-color:#E94560}.ch-card.c2{border-left-color:#1F6FEB}.ch-card.c3{border-left-color:#F5A623}.ch-card.c4{border-left-color:#7B68EE}
+.ch-title{display:flex;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap}
+.ch-badge{padding:4px 12px;border-radius:20px;font-size:.78rem;font-weight:700;color:#fff;white-space:nowrap}
+.c1 .ch-badge{background:#E94560}.c2 .ch-badge{background:#1F6FEB}.c3 .ch-badge{background:#F5A623}.c4 .ch-badge{background:#7B68EE}
+.ch-pts{font-size:.85rem;color:#888;margin-left:auto;white-space:nowrap}
+/* SOLVED OVERLAY */
+.solved-ov{background:linear-gradient(135deg,#e6f4ea,#f0fff4);border:2px solid #28a745;border-radius:12px;padding:20px;text-align:center}
+.solved-ov .pts{font-size:1.6rem;font-weight:700;color:#28a745;margin-top:6px}
+/* EMAIL MOCKUP */
+.email-mock{border:1px solid #e0e0e0;border-radius:10px;overflow:hidden;margin:14px 0}
+.email-head{background:#f8f9fa;padding:14px 18px;border-bottom:1px solid #e0e0e0}
+.ef{font-size:.88rem;margin-bottom:4px;color:#333}
+.ef b{color:#999;font-size:.76rem;text-transform:uppercase;letter-spacing:.5px;display:inline-block;width:66px}
+.email-body{padding:18px;line-height:1.7;color:#333;font-size:.92rem}
+.email-cta{display:inline-block;margin-top:12px;padding:10px 22px;background:#0070ba;color:#fff;border-radius:6px;text-decoration:none;font-size:.88rem;cursor:not-allowed}
+.email-nav{display:flex;justify-content:space-between;align-items:center;margin:10px 0}
+.email-ctr{font-size:.88rem;color:#666;font-weight:600}
+/* VERDICT */
+.verdict-sec{background:#f8f9fa;border-radius:10px;padding:16px;margin-top:12px}
+.verdict-btns{display:flex;gap:12px;margin:12px 0}
+.vbtn{flex:1;padding:12px;border:2px solid #e0e0e0;border-radius:10px;font-size:.95rem;font-weight:600;cursor:pointer;background:#fff;transition:all .2s}
+.vbtn.ph{color:#E94560;border-color:#E94560}.vbtn.ph:hover,.vbtn.ph.sel{background:#E94560;color:#fff}
+.vbtn.le{color:#1F6FEB;border-color:#1F6FEB}.vbtn.le:hover,.vbtn.le.sel{background:#1F6FEB;color:#fff}
+/* RED FLAGS */
+.rf-item{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:8px;margin-bottom:6px;background:#fff5f7;transition:background .15s}
+.rf-item:hover{background:#ffe0e6}
+.rf-item input[type=checkbox]{width:17px;height:17px;cursor:pointer;accent-color:#E94560}
+.rf-item label{cursor:pointer;font-size:.88rem;line-height:1.4}
+/* FLAG INPUT */
+.flag-grp{display:flex;gap:10px;margin-top:16px}
+.flag-in{flex:1;padding:12px 16px;border:2px solid #e0e0e0;border-radius:10px;font-size:.93rem;font-family:'Courier New',monospace;outline:none;transition:border-color .2s}
+.flag-in:focus{border-color:#1F6FEB}
+.flag-in.ok{border-color:#28a745;background:#f0fff4}
+.flag-in.bad{border-color:#E94560;background:#fff5f7;animation:shake .3s}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+/* FEEDBACK */
+.fb{margin-top:10px;padding:10px 14px;border-radius:8px;font-size:.88rem;font-weight:500}
+.fb-ok{background:#e6f4ea;color:#1e7e34;border-left:4px solid #28a745}
+.fb-bad{background:#fdecea;color:#c0392b;border-left:4px solid #E94560}
+/* ENCODED TEXT */
+.enc-text{font-family:'Courier New',monospace;font-size:1.1rem;font-weight:700;color:#E94560;background:#fff5f7;padding:14px 20px;border-radius:10px;border:2px dashed #E94560;text-align:center;margin:12px 0;letter-spacing:2px;word-break:break-all}
+/* ROT13 TABLE */
+.rot13-grid{display:grid;grid-template-columns:repeat(13,1fr);gap:4px;margin-top:12px;font-family:'Courier New',monospace;font-size:.78rem}
+.rot13-cell{background:#f0f4ff;border:1px solid #c8d8ff;border-radius:4px;padding:5px 2px;text-align:center}
+.rot13-cell .a{color:#1F6FEB;font-weight:700}.rot13-cell .b{color:#E94560;font-weight:700}
+/* LOGIN MOCKUP */
+.lm{border:1px solid #e0e0e0;border-radius:12px;overflow:hidden;max-width:380px;margin:14px auto;box-shadow:0 4px 20px rgba(0,0,0,.1)}
+.lm-head{background:#1F6FEB;padding:22px;text-align:center;color:#fff}
+.lm-body{padding:22px;background:#fff}
+.lf{margin-bottom:14px}
+.lf label{display:block;font-size:.82rem;color:#555;margin-bottom:5px;font-weight:600}
+.lf input{width:100%;padding:10px 13px;border:1px solid #e0e0e0;border-radius:8px;font-size:.88rem;background:#f9f9f9;color:#666}
+.lbtn{width:100%;padding:11px;background:#E94560;color:#fff;border:none;border-radius:8px;font-size:.95rem;font-weight:600;cursor:not-allowed;margin-top:6px}
+/* CLUE BOX */
+.clue-box{background:#f0f4ff;border:1px solid #c8d8ff;border-radius:10px;padding:16px;margin:12px 0}
+.clue-item{display:flex;align-items:flex-start;gap:10px;margin-bottom:10px;font-size:.9rem}
+.clue-icon{font-size:1.1rem;flex-shrink:0;margin-top:1px}
+/* TEACHER NOTE */
+.t-note{font-size:.8rem;color:#aaa;font-style:italic;margin-top:10px;padding:8px 12px;background:#f9f9f9;border-radius:6px;border-left:3px solid #ddd}
+/* INFO BOX */
+.info-box{background:#f0f4ff;border-radius:10px;padding:14px 16px;margin:12px 0;font-size:.9rem}
+.info-box ol,.info-box ul{padding-left:20px;margin-top:8px;line-height:1.9;color:#444}
+.warn-box{background:#fff9e6;border-radius:10px;padding:14px 16px;margin-bottom:14px;font-size:.9rem}
+/* CONGRATS */
+.congrats{background:linear-gradient(135deg,#1F6FEB,#E94560);color:#fff;text-align:center;padding:30px;border-radius:16px;margin:20px 0;display:none}
+.congrats h2{font-size:1.9rem;margin-bottom:10px}
+/* CONFETTI */
+.cf{position:fixed;border-radius:2px;animation:cfall 3s ease-in forwards;z-index:9999;pointer-events:none}
+@keyframes cfall{0%{transform:translateY(-20px) rotate(0deg);opacity:1}100%{transform:translateY(100vh) rotate(720deg);opacity:0}}
+/* LEADERBOARD */
+#lb-view{display:none}
+.lb-header{background:#fff;border-bottom:3px solid #1F6FEB;padding:22px;text-align:center;box-shadow:0 2px 10px rgba(0,0,0,.07)}
+.lb-header h1{font-size:1.8rem;color:#1a1a2e}
+.lb-meta{margin-top:12px;display:flex;align-items:center;justify-content:center;gap:16px;flex-wrap:wrap}
+.lb-table{width:100%;border-collapse:collapse}
+.lb-table th{background:#1F6FEB;color:#fff;padding:11px 14px;text-align:center;font-size:.82rem}
+.lb-table td{padding:11px 14px;text-align:center;border-bottom:1px solid #f0f0f0;font-size:.88rem}
+.lb-table tr.gold{background:#fff9e6}.lb-table tr.silver{background:#f7f7f7}.lb-table tr.bronze{background:#fff5f0}
+.rank-badge{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:50%;font-weight:700;font-size:.85rem}
+.r1{background:#FFD700;color:#333}.r2{background:#C0C0C0;color:#333}.r3{background:#CD7F32;color:#fff}.rN{background:#e0e0e0;color:#555}
+.ref-ind{font-size:.8rem;color:#888}
+/* HIDDEN */
+.hidden{display:none!important}
+/* RESPONSIVE */
+@media(max-width:600px){
+  .site-header h1{font-size:1.4rem}.timer{font-size:1.5rem}
+  .verdict-btns{flex-direction:column}.flag-grp{flex-direction:column}
+  .rot13-grid{grid-template-columns:repeat(7,1fr)}
+  .ch-title{gap:8px}.ch-pts{margin-left:0;width:100%}
+}
+</style>
+</head>
+<body>
+
+<!-- ===================== STUDENT VIEW ===================== -->
+<div id="student-view">
+  <header class="site-header">
+    <h1>Operation: Catch The Phisher 🎣</h1>
+    <div class="sub">SIMAD University — Cybersecurity CTF</div>
+    <div class="ref-ind" id="sync-status" style="margin-top:6px">Connecting scoreboard...</div>
+    <div class="timer-wrap">
+      <span>⏱</span>
+      <span class="timer" id="timer">45:00</span>
+    </div>
+  </header>
+
+  <div class="wrap">
+
+    <!-- START CARD -->
+    <div class="card" id="start-card">
+      <div class="start-inner">
+        <h2>Enter Your Full Name to Begin</h2>
+        <div class="start-row">
+          <input class="name-in" id="student-name" type="text" placeholder="e.g. Amina Mohamed Hassan" autocomplete="off"/>
+          <button class="btn btn-blue" onclick="startCTF()">Start CTF 🚀</button>
+        </div>
+        <div class="err-msg" id="name-err">⚠️ Please enter your full name (first and last name).</div>
+      </div>
+    </div>
+
+    <!-- MAIN CTF CONTENT -->
+    <div id="ctf-content" class="hidden">
+
+      <!-- STORY -->
+      <div class="card">
+        <div class="story">
+          🕵️ <strong>Mission Brief:</strong> A cybercriminal known as "The Phisher" has been targeting SIMAD University students. Your mission: analyse the evidence, follow the digital trail, and catch them before they strike again.
+        </div>
+      </div>
+
+      <!-- PROGRESS -->
+      <div class="card">
+        <div class="prog-row">
+          <span>Challenge Progress</span>
+          <span id="prog-text">0 / 4 Completed</span>
+        </div>
+        <div class="prog-bg"><div class="prog-fill" id="prog-fill"></div></div>
+      </div>
+
+      <!-- SCOREBOARD STRIP -->
+      <div class="card" style="overflow-x:auto">
+        <h3 style="margin-bottom:12px;color:#1a1a2e">📊 Your Scoreboard</h3>
+        <table class="score-table">
+          <thead>
+            <tr>
+              <th>Full Name</th>
+              <th>Challenge 1<br><small>30 pts</small></th>
+              <th>Challenge 2<br><small>25 pts</small></th>
+              <th>Challenge 3<br><small>25 pts</small></th>
+              <th>Challenge 4<br><small>20 pts</small></th>
+              <th>Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td id="sc-name" style="font-weight:600;text-align:left">—</td>
+              <td><span id="sc1" class="badge badge-pend">0/30</span></td>
+              <td><span id="sc2" class="badge badge-pend">0/25</span></td>
+              <td><span id="sc3" class="badge badge-pend">0/25</span></td>
+              <td><span id="sc4" class="badge badge-pend">0/20</span></td>
+              <td><strong id="sc-total" style="color:#1F6FEB;font-size:1.1rem">0</strong></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- CONGRATS -->
+      <div class="congrats" id="congrats">
+        <div style="font-size:3rem;margin-bottom:10px">🏆</div>
+        <h2>Congratulations, <span id="congrats-name"></span>!</h2>
+        <p style="font-size:1.05rem;opacity:.9;margin-top:6px">You've completed all challenges!<br>Final Score: <strong id="congrats-score"></strong> / 100</p>
+        <p style="margin-top:8px;font-size:.9rem;opacity:.8">You caught The Phisher! Mission accomplished. 🎉</p>
+      </div>
+
+      <!-- ═══════════════════════════════════════════ -->
+      <!-- CHALLENGE 1 -->
+      <!-- ═══════════════════════════════════════════ -->
+      <div class="card ch-card c1" id="c1">
+        <div class="ch-title">
+          <span class="ch-badge">CHALLENGE 1</span>
+          <h3>🎯 Spot the Phish</h3>
+          <span class="ch-pts">30 points</span>
+        </div>
+
+        <div class="solved-ov hidden" id="c1-done">
+          <div style="font-size:1.1rem;font-weight:600">✅ Challenge 1 Complete!</div>
+          <div class="pts" id="c1-pts">+0 pts</div>
+        </div>
+
+        <div id="c1-body">
+          <p style="color:#555;font-size:.9rem;margin-bottom:14px">
+            Examine each email. Decide <strong>PHISHING</strong> or <strong>LEGITIMATE</strong>, then tick every red flag you spot.<br>
+            <em>2 pts per correct verdict · 1 pt per correct red flag</em>
+          </p>
+
+          <div class="email-nav">
+            <button class="btn btn-blue" id="btn-prev" onclick="goPrev()">← Prev</button>
+            <span class="email-ctr" id="email-ctr">Email 1 of 5</span>
+            <button class="btn btn-blue" id="btn-next" onclick="goNext()">Next →</button>
+          </div>
+
+          <div id="email-display"></div>
+
+          <div class="verdict-sec">
+            <strong style="font-size:.88rem;color:#555">Your verdict for this email:</strong>
+            <div class="verdict-btns">
+              <button class="vbtn ph" id="vbtn-ph" onclick="setVerdict('phishing')">🚨 PHISHING</button>
+              <button class="vbtn le" id="vbtn-le" onclick="setVerdict('legitimate')">✅ LEGITIMATE</button>
+            </div>
+            <div id="rf-section" class="hidden">
+              <strong style="font-size:.88rem;color:#555">Select all red flags you can spot:</strong>
+              <div id="rf-list" style="margin-top:8px"></div>
+            </div>
+          </div>
+
+          <div style="margin-top:16px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
+            <span style="font-size:.88rem;color:#666">Reviewed: <span id="c1-done-count">0</span> / 5 emails</span>
+            <button class="btn btn-red" onclick="submitC1()">Submit Challenge 1 →</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══════════════════════════════════════════ -->
+      <!-- CHALLENGE 2 -->
+      <!-- ═══════════════════════════════════════════ -->
+      <div class="card ch-card c2" id="c2">
+        <div class="ch-title">
+          <span class="ch-badge">CHALLENGE 2</span>
+          <h3>🔐 Decode the Message</h3>
+          <span class="ch-pts">25 points</span>
+        </div>
+
+        <div class="solved-ov hidden" id="c2-done">
+          <div style="font-size:1.1rem;font-weight:600">✅ Challenge 2 Complete!</div>
+          <div class="pts">+25 pts</div>
+        </div>
+
+        <div id="c2-body">
+          <div class="story" style="margin-bottom:14px">
+            🔍 <strong>Intel Report:</strong> The Phisher left an encoded note inside a phishing email HTML comment. We extracted it. Decode it to find the flag.
+          </div>
+
+          <div class="enc-text">SYNT{lbh_qrpbqrq_gur_zrffntr_c41fu3e}</div>
+
+          <div class="info-box">
+            <strong style="color:#1F6FEB">📋 Instructions:</strong>
+            <ol>
+              <li>Open <strong>rot13.com</strong> in a new tab</li>
+              <li>Paste the encoded text above and decode it</li>
+              <li>Replace <strong>SYNT</strong> with <strong>FLAG</strong></li>
+              <li>Submit the complete flag below</li>
+            </ol>
+          </div>
+
+          <details style="margin:12px 0">
+            <summary style="cursor:pointer;color:#1F6FEB;font-size:.9rem;font-weight:600">📊 ROT13 Reference Table (click to expand)</summary>
+            <div class="rot13-grid">
+              <div class="rot13-cell"><div class="a">A</div><div class="b">N</div></div>
+              <div class="rot13-cell"><div class="a">B</div><div class="b">O</div></div>
+              <div class="rot13-cell"><div class="a">C</div><div class="b">P</div></div>
+              <div class="rot13-cell"><div class="a">D</div><div class="b">Q</div></div>
+              <div class="rot13-cell"><div class="a">E</div><div class="b">R</div></div>
+              <div class="rot13-cell"><div class="a">F</div><div class="b">S</div></div>
+              <div class="rot13-cell"><div class="a">G</div><div class="b">T</div></div>
+              <div class="rot13-cell"><div class="a">H</div><div class="b">U</div></div>
+              <div class="rot13-cell"><div class="a">I</div><div class="b">V</div></div>
+              <div class="rot13-cell"><div class="a">J</div><div class="b">W</div></div>
+              <div class="rot13-cell"><div class="a">K</div><div class="b">X</div></div>
+              <div class="rot13-cell"><div class="a">L</div><div class="b">Y</div></div>
+              <div class="rot13-cell"><div class="a">M</div><div class="b">Z</div></div>
+            </div>
+          </details>
+
+          <div class="flag-grp">
+            <input class="flag-in" id="fi2" type="text" placeholder="FLAG{...}" autocomplete="off"/>
+            <button class="btn btn-blue" onclick="submitFlag(2)">Submit Flag</button>
+          </div>
+          <div id="fb2"></div>
+        </div>
+      </div>
+
+      <!-- ═══════════════════════════════════════════ -->
+      <!-- CHALLENGE 3 -->
+      <!-- ═══════════════════════════════════════════ -->
+      <div class="card ch-card c3" id="c3">
+        <div class="ch-title">
+          <span class="ch-badge">CHALLENGE 3</span>
+          <h3>🔍 Inspect the Source Code</h3>
+          <span class="ch-pts">25 points</span>
+        </div>
+
+        <div class="solved-ov hidden" id="c3-done">
+          <div style="font-size:1.1rem;font-weight:600">✅ Challenge 3 Complete!</div>
+          <div class="pts">+25 pts</div>
+        </div>
+
+        <div id="c3-body">
+          <div class="story" style="margin-bottom:14px">
+            🖥️ <strong>Intel Report:</strong> The Phisher cloned the SIMAD University login page and left their signature hidden inside the HTML. Find it.
+          </div>
+
+          <div class="warn-box">
+            <strong>📋 How to find the flag:</strong> Right-click the login page below → <strong>Inspect</strong> and search for <code style="background:#e0e9ff;padding:2px 6px;border-radius:4px">FLAG</code>, or press <strong>Ctrl+U</strong> to view page source then Ctrl+F for FLAG.
+          </div>
+
+          <!-- THE FLAG IS HIDDEN IN THIS HTML COMMENT -->
+          <!-- FLAG{s0urc3_c0d3_n3v3r_l13s} -->
+          <div class="lm">
+            <div class="lm-head">
+              <div style="font-size:1.6rem;font-weight:800;letter-spacing:1px">SIMAD</div>
+              <div style="font-size:.82rem;opacity:.9;margin-top:3px">University Student Portal</div>
+            </div>
+            <div class="lm-body">
+              <div style="text-align:center;margin-bottom:18px">
+                <div style="font-weight:600;color:#333">Sign in to your account</div>
+                <div style="font-size:.78rem;color:#888;margin-top:3px">Enter your university credentials</div>
+              </div>
+              <div class="lf">
+                <label>University Email</label>
+                <input type="email" placeholder="student@simad.edu.so" disabled/>
+              </div>
+              <div class="lf">
+                <label>Password</label>
+                <input type="password" placeholder="••••••••" disabled/>
+              </div>
+              <button class="lbtn" disabled>Sign In</button>
+              <div style="text-align:center;margin-top:12px;font-size:.76rem;color:#E94560;font-weight:600">
+                ⚠️ Simulated phishing page — do not enter real credentials!
+              </div>
+            </div>
+          </div>
+
+          <div class="flag-grp" style="margin-top:20px">
+            <input class="flag-in" id="fi3" type="text" placeholder="FLAG{...}" autocomplete="off"/>
+            <button class="btn btn-blue" onclick="submitFlag(3)">Submit Flag</button>
+          </div>
+          <div id="fb3"></div>
+        </div>
+      </div>
+
+      <!-- ═══════════════════════════════════════════ -->
+      <!-- CHALLENGE 4 -->
+      <!-- ═══════════════════════════════════════════ -->
+      <div class="card ch-card c4" id="c4">
+        <div class="ch-title">
+          <span class="ch-badge">CHALLENGE 4</span>
+          <h3>🌐 Trace the Phisher</h3>
+          <span class="ch-pts">20 points</span>
+        </div>
+
+        <div class="solved-ov hidden" id="c4-done">
+          <div style="font-size:1.1rem;font-weight:600">✅ Challenge 4 Complete!</div>
+          <div class="pts">+20 pts</div>
+        </div>
+
+        <div id="c4-body">
+          <div class="story" style="margin-bottom:14px">
+            🌍 <strong>Intel Report:</strong> Using clues from the previous challenges, you identified a suspect username. Now use OSINT to track them down.
+          </div>
+
+          <div class="clue-box">
+            <h4 style="color:#1F6FEB;margin-bottom:12px">🔎 Evidence Collected</h4>
+            <div class="clue-item">
+              <span class="clue-icon">👤</span>
+              <span><strong>Username:</strong> <code style="background:#e0e9ff;padding:2px 8px;border-radius:4px;font-size:.95rem">th3ph1sh3r</code></span>
+            </div>
+            <div class="clue-item">
+              <span class="clue-icon">💬</span>
+              <span><strong>Platform hint:</strong> "They left a note on a public paste site"</span>
+            </div>
+            <div class="clue-item">
+              <span class="clue-icon">🐉</span>
+              <span><strong>Kali Linux tool:</strong> <code style="background:#e0e9ff;padding:2px 8px;border-radius:4px">sherlock th3ph1sh3r</code></span>
+            </div>
+          </div>
+
+          <div class="info-box">
+            <strong style="color:#1F6FEB">📋 Instructions:</strong>
+            <ul>
+              <li>Search <strong>pastebin.com</strong> for username <strong>th3ph1sh3r</strong></li>
+              <li>hint:go to this browser <code style="background:#e0e9ff;padding:2px 6px;border-radius:4px">https://pastebin.com/u/th3ph1sh3r</code></li>
+              <li>Find the paste containing the flag and submit it below</li>
+            </ul>
+          </div>
+
+
+          <div class="flag-grp" style="margin-top:16px">
+            <input class="flag-in" id="fi4" type="text" placeholder="FLAG{...}" autocomplete="off"/>
+            <button class="btn btn-blue" onclick="submitFlag(4)">Submit Flag</button>
+          </div>
+          <div id="fb4"></div>
+        </div>
+      </div>
+
+      <!-- LEADERBOARD LINK -->
+      <div style="text-align:center;padding:10px 0 50px">
+        <button class="btn btn-blue" onclick="showLB()" style="padding:14px 34px;font-size:1.05rem">
+          🏆 View Live Leaderboard
+        </button>
+      </div>
+
+    </div><!-- end ctf-content -->
+  </div><!-- end wrap -->
+</div><!-- end student-view -->
+
+
+<!-- ===================== LEADERBOARD VIEW ===================== -->
+<div id="lb-view">
+  <div class="lb-header">
+    <div style="font-size:.82rem;color:#1F6FEB;letter-spacing:2px;text-transform:uppercase;margin-bottom:8px">SIMAD University — Cybersecurity CTF</div>
+    <h1>🏆 Live Leaderboard — Operation: Catch The Phisher</h1>
+    <div class="lb-meta">
+      <button class="btn btn-outline" onclick="hideLB()">← Back to CTF</button>
+      <span class="ref-ind" id="ref-ind">Auto-refreshes in 10s</span>
+      <button class="btn btn-blue" onclick="doRefreshLB()" style="padding:9px 18px;font-size:.85rem">🔄 Refresh Now</button>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <div class="card" style="overflow-x:auto;margin-top:20px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+        <span style="font-size:.85rem;color:#888">Participants: <strong id="lb-count">0</strong></span>
+      </div>
+      <table class="lb-table" id="lb-table">
+        <thead>
+          <tr>
+            <th>Rank</th>
+            <th style="text-align:left">Full Name</th>
+            <th>Ch.1<br><small>30pts</small></th>
+            <th>Ch.2<br><small>25pts</small></th>
+            <th>Ch.3<br><small>25pts</small></th>
+            <th>Ch.4<br><small>20pts</small></th>
+            <th>Total</th>
+            <th>Time Finished</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody id="lb-body">
+          <tr><td colspan="9" style="color:#aaa;padding:30px">Waiting for students to join…</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+// ──────────────────────────────────────────────────────────────
+// SUPABASE
+// ──────────────────────────────────────────────────────────────
+// Publishable keys are safe to use in browsers, but they are never secret.
+// Protect the data with Supabase Auth + Row Level Security policies.
+const SUPABASE_URL = "https://dnyshhiqftfvxhxvsbty.supabase.co";
+const SUPABASE_PUBLISHABLE_KEY = "sb_publishable__2GWHnklLXBBhBlxD8tiTA_wb_4-NYh";
+const SUPABASE_TABLE = "ctf_leaderboard";
+
+let sb = null;
+let sbUser = null;
+let sbReady = false;
+let remoteLB = {};
+
+function setSyncStatus(text, isError = false) {
+  const el = document.getElementById("sync-status");
+  if (!el) return;
+  el.textContent = text;
+  el.style.color = isError ? "#E94560" : "#888";
+}
+
+async function initSupabase() {
+  if (!window.supabase) {
+    setSyncStatus("Local scoreboard only - Supabase SDK did not load", true);
+    return;
+  }
+
+  sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
+    auth: {
+      persistSession: true,
+      autoRefreshToken: true,
+      detectSessionInUrl: false
+    }
+  });
+
+  const { data: existing } = await sb.auth.getSession();
+  if (existing.session?.user) {
+    sbUser = existing.session.user;
+  } else {
+    const { data, error } = await sb.auth.signInAnonymously();
+    if (error) {
+      setSyncStatus("Local scoreboard only - enable Anonymous Auth in Supabase", true);
+      return;
+    }
+    sbUser = data.user;
+  }
+
+  sbReady = !!sbUser;
+  setSyncStatus("Live scoreboard connected");
+  await refreshRemoteLB();
+}
+
+function buildLBRow() {
+  return {
+    user_id: sbUser.id,
+    name: S.name,
+    c1: S.c1Score,
+    c2: S.c2Solved ? 25 : 0,
+    c3: S.c3Solved ? 25 : 0,
+    c4: S.c4Solved ? 20 : 0,
+    total: S.c1Score + (S.c2Solved ? 25 : 0) + (S.c3Solved ? 25 : 0) + (S.c4Solved ? 20 : 0),
+    start_time: S.startTime,
+    finish_time: S.finishTime,
+    done: S.c1Submitted && S.c2Solved && S.c3Solved && S.c4Solved,
+    updated_at: new Date().toISOString()
+  };
+}
+
+function normalizeLBRow(r) {
+  return {
+    name: r.name,
+    c1: r.c1 || 0,
+    c2: r.c2 || 0,
+    c3: r.c3 || 0,
+    c4: r.c4 || 0,
+    total: r.total || 0,
+    startTime: r.start_time,
+    finishTime: r.finish_time,
+    done: !!r.done
+  };
+}
+
+async function pushToRemoteLB() {
+  if (!sbReady || !S.name) return;
+  const { error } = await sb
+    .from(SUPABASE_TABLE)
+    .upsert(buildLBRow(), { onConflict: "user_id" });
+  if (error) setSyncStatus("Local scoreboard only - check table/RLS", true);
+}
+
+async function refreshRemoteLB() {
+  if (!sbReady) return {};
+  const { data, error } = await sb
+    .from(SUPABASE_TABLE)
+    .select("name,c1,c2,c3,c4,total,start_time,finish_time,done")
+    .order("total", { ascending: false });
+
+  if (error) {
+    setSyncStatus("Local scoreboard only - check table/RLS", true);
+    return {};
+  }
+
+  remoteLB = {};
+  (data || []).forEach((row, i) => {
+    remoteLB[row.name || ("student-" + i)] = normalizeLBRow(row);
+  });
+  setSyncStatus("Live scoreboard connected");
+  return remoteLB;
+}
+
+// ──────────────────────────────────────────────────────────────
+// EMAIL DATA
+// ──────────────────────────────────────────────────────────────
+const EMAILS = [
+  {
+    from: "services@paypal-accounts.com",
+    subject: "[PayPal]: Your account access has been limited",
+    body: `<p>Dear PayPal customer,</p>
+           <p style="margin-top:10px">Your account has been <strong>limited</strong> due to suspicious activity. You have <strong style="color:#c00">24 hours</strong> to resolve this issue or your account will be <strong>permanently disabled</strong>.</p>
+           <p style="margin-top:10px">Please confirm your information immediately to restore full access to your account.</p>
+           <a class="email-cta" href="#" onclick="return false">Confirm Your Information</a>`,
+    verdict: "phishing",
+    flags: [
+      { id:"e1f1", text:"Fake domain — paypal-accounts.com is NOT paypal.com" },
+      { id:"e1f2", text:"Generic greeting — 'Dear PayPal customer' (no name)" },
+      { id:"e1f3", text:"Urgency tactic — '24 hours' threat" },
+      { id:"e1f4", text:"Threatening permanent account disable" },
+      { id:"e1f5", text:"Suspicious 'Confirm Your Information' button" },
+    ]
+  },
+  {
+    from: "it-support@simad-helpdesk.net",
+    subject: "URGENT: Your university email will expire in 12 hours",
+    body: `<p>Dear Student,</p>
+           <p style="margin-top:10px">Your SIMAD University email account is about to <strong style="color:#c00">expire in 12 hours</strong>. You must reset your password <strong>immediately</strong> using the link below or lose access to all university systems, including your exam portal and course materials.</p>
+           <p style="margin-top:10px">This is your <strong>final notice</strong>. Failure to act will result in account termination.</p>
+           <a class="email-cta" style="background:#c00" href="#" onclick="return false">Reset Password Now →</a>`,
+    verdict: "phishing",
+    flags: [
+      { id:"e2f1", text:"Wrong domain — real SIMAD IT uses @simad.edu.so, not @simad-helpdesk.net" },
+      { id:"e2f2", text:"Urgency — 'expires in 12 hours'" },
+      { id:"e2f3", text:"Threatening loss of access to all university systems" },
+      { id:"e2f4", text:"Unsolicited — university IT never emails password resets like this" },
+      { id:"e2f5", text:"'Final notice' pressure tactic" },
+    ]
+  },
+  {
+    from: "order-update@amazon.com",
+    subject: "Your order has shipped — arriving tomorrow",
+    body: `<p>Hello John,</p>
+           <p style="margin-top:10px">Good news! Your order <strong>#112-4859302</strong> has been shipped and is on its way to you.</p>
+           <p style="margin-top:10px">📦 <strong>Estimated delivery:</strong> Tomorrow by 8:00 PM</p>
+           <p style="margin-top:10px">You can track your package anytime using your Amazon account. <strong>No action is required</strong> from you at this time.</p>
+           <p style="margin-top:14px;color:#888;font-size:.85rem">This is an automated shipping confirmation. Please do not reply to this email.</p>`,
+    verdict: "legitimate",
+    flags: []
+  },
+  {
+    from: "delivery@dhl-notification-center.com",
+    subject: "Your package could not be delivered — action required",
+    body: `<p>Dear Customer,</p>
+           <p style="margin-top:10px">We attempted to deliver your package today but were unable to complete the delivery due to an incorrect address.</p>
+           <p style="margin-top:10px;color:#c00"><strong>⚠️ You must pay a $2.99 redelivery fee within 24 hours</strong> to reschedule your delivery. After this period, your package will be returned to the sender and you will not receive a refund.</p>
+           <a class="email-cta" style="background:#FFCC00;color:#333" href="#" onclick="return false">Pay $2.99 &amp; Reschedule →</a>`,
+    verdict: "phishing",
+    flags: [
+      { id:"e4f1", text:"Fake domain — dhl-notification-center.com is NOT dhl.com" },
+      { id:"e4f2", text:"Generic greeting — 'Dear Customer' (no name)" },
+      { id:"e4f3", text:"Urgency — '24 hours' or package returned" },
+      { id:"e4f4", text:"Asking for payment via email — DHL does not do this" },
+      { id:"e4f5", text:"Threatening no refund to increase panic" },
+    ]
+  },
+  {
+    from: "security-alert@microsoft-accounts-verify.com",
+    subject: "Suspicious sign-in detected on your Microsoft account",
+    body: `<p>Dear User,</p>
+           <p style="margin-top:10px">We detected a sign-in attempt to your Microsoft account from an unusual location: <strong>Somalia (SO)</strong>.</p>
+           <p style="margin-top:10px;color:#c00"><strong>If this was not you, your account is at risk.</strong> You must verify your identity <strong>immediately</strong> or your account will be locked within 12 hours.</p>
+           <a class="email-cta" style="background:#0067b8" href="#" onclick="return false">Verify My Account →</a>
+           <p style="margin-top:12px;font-size:.82rem;color:#888">Microsoft Security Team</p>`,
+    verdict: "phishing",
+    flags: [
+      { id:"e5f1", text:"Fake domain — microsoft-accounts-verify.com is NOT microsoft.com" },
+      { id:"e5f2", text:"Fear tactic — unusual sign-in warning designed to panic" },
+      { id:"e5f3", text:"Generic greeting — 'Dear User' (no name)" },
+      { id:"e5f4", text:"Urgency — 'verify immediately or account locked in 12 hours'" },
+      { id:"e5f5", text:"Microsoft sends real alerts through the Microsoft app, not email links" },
+    ]
+  }
+];
+
+const CORRECT_FLAGS = {
+  2: "FLAG{you_decoded_the_message_p41sh3r}",
+  3: "FLAG{s0urc3_c0d3_n3v3r_l13s}",
+  4: "FLAG{0s1nt_c4ught_th3_ph1sh3r}"
+};
+
+// ──────────────────────────────────────────────────────────────
+// STATE
+// ──────────────────────────────────────────────────────────────
+let S = {
+  name: "",
+  timerSec: 45 * 60,
+  emailIdx: 0,
+  verdicts: {},    // { 0..4 : 'phishing'|'legitimate' }
+  checkedFlags: {}, // { 0..4 : [flagId, ...] }
+  c1Submitted: false,
+  c1Score: 0,
+  c2Solved: false,
+  c3Solved: false,
+  c4Solved: false,
+  startTime: null,
+  finishTime: null
+};
+
+let timerHandle = null;
+
+// ──────────────────────────────────────────────────────────────
+// PERSISTENCE
+// ──────────────────────────────────────────────────────────────
+function saveS() {
+  localStorage.setItem("ctf_s", JSON.stringify(S));
+  pushToLB();
+}
+
+function loadS() {
+  const raw = localStorage.getItem("ctf_s");
+  if (!raw) return false;
+  try { S = { ...S, ...JSON.parse(raw) }; return true; }
+  catch(e) { return false; }
+}
+
+function pushToLB() {
+  if (!S.name) return;
+  const lb = getLB();
+  lb[S.name] = {
+    name: S.name,
+    c1: S.c1Score,
+    c2: S.c2Solved ? 25 : 0,
+    c3: S.c3Solved ? 25 : 0,
+    c4: S.c4Solved ? 20 : 0,
+    total: S.c1Score + (S.c2Solved?25:0) + (S.c3Solved?25:0) + (S.c4Solved?20:0),
+    startTime: S.startTime,
+    finishTime: S.finishTime,
+    done: S.c1Submitted && S.c2Solved && S.c3Solved && S.c4Solved
+  };
+  localStorage.setItem("ctf_lb", JSON.stringify(lb));
+  pushToRemoteLB();
+}
+
+function getLB() {
+  if (Object.keys(remoteLB).length) return remoteLB;
+  try { return JSON.parse(localStorage.getItem("ctf_lb") || "{}"); }
+  catch(e) { return {}; }
+}
+
+// ──────────────────────────────────────────────────────────────
+// TIMER
+// ──────────────────────────────────────────────────────────────
+function startTimer() {
+  if (timerHandle) return;
+  timerHandle = setInterval(() => {
+    if (S.timerSec > 0) S.timerSec--;
+    renderTimer();
+    if (S.timerSec % 30 === 0) saveS();
+    if (S.timerSec === 0) clearInterval(timerHandle);
+  }, 1000);
+}
+
+function renderTimer() {
+  const m = Math.floor(S.timerSec / 60);
+  const s = S.timerSec % 60;
+  const el = document.getElementById("timer");
+  el.textContent = String(m).padStart(2,"0") + ":" + String(s).padStart(2,"0");
+  el.className = "timer";
+  if (S.timerSec <= 300) el.classList.add("danger");
+  else if (S.timerSec <= 600) el.classList.add("warn");
+}
+
+// ──────────────────────────────────────────────────────────────
+// START
+// ──────────────────────────────────────────────────────────────
+function startCTF() {
+  const val = document.getElementById("student-name").value.trim();
+  const words = val.split(/\s+/).filter(w => w.length > 0);
+  if (words.length < 2) {
+    const e = document.getElementById("name-err");
+    e.style.display = "block";
+    return;
+  }
+  S.name = val;
+  S.startTime = new Date().toISOString();
+  document.getElementById("start-card").style.display = "none";
+  document.getElementById("ctf-content").classList.remove("hidden");
+  updateScoreboard();
+  renderEmail();
+  startTimer();
+  saveS();
+}
+
+// ──────────────────────────────────────────────────────────────
+// CHALLENGE 1 — EMAIL NAVIGATION & SCORING
+// ──────────────────────────────────────────────────────────────
+function renderEmail() {
+  if (S.c1Submitted) {
+    document.getElementById("c1-body").classList.add("hidden");
+    document.getElementById("c1-done").classList.remove("hidden");
+    document.getElementById("c1-pts").textContent = "+" + S.c1Score + " pts";
+    return;
+  }
+
+  const em = EMAILS[S.emailIdx];
+  document.getElementById("email-display").innerHTML = `
+    <div class="email-mock">
+      <div class="email-head">
+        <div class="ef"><b>From:</b> ${em.from}</div>
+        <div class="ef"><b>Subject:</b> ${em.subject}</div>
+      </div>
+      <div class="email-body">${em.body}</div>
+    </div>`;
+
+  document.getElementById("email-ctr").textContent = "Email " + (S.emailIdx+1) + " of 5";
+  document.getElementById("btn-prev").disabled = S.emailIdx === 0;
+  document.getElementById("btn-next").disabled = S.emailIdx === 4;
+
+  const v = S.verdicts[S.emailIdx];
+  document.getElementById("vbtn-ph").className = "vbtn ph" + (v==="phishing"?" sel":"");
+  document.getElementById("vbtn-le").className = "vbtn le" + (v==="legitimate"?" sel":"");
+
+  if (v === "phishing" && em.flags.length > 0) renderFlags(em);
+  else document.getElementById("rf-section").classList.add("hidden");
+
+  document.getElementById("c1-done-count").textContent = Object.keys(S.verdicts).length;
+}
+
+function renderFlags(em) {
+  const sec = document.getElementById("rf-section");
+  sec.classList.remove("hidden");
+  const checked = S.checkedFlags[S.emailIdx] || [];
+  document.getElementById("rf-list").innerHTML = em.flags.map(f => `
+    <div class="rf-item">
+      <input type="checkbox" id="${f.id}" ${checked.includes(f.id)?"checked":""}>
+      <label for="${f.id}">${f.text}</label>
+    </div>`).join("");
+  em.flags.forEach(f => {
+    document.getElementById(f.id).addEventListener("change", e => {
+      const arr = S.checkedFlags[S.emailIdx] || [];
+      if (e.target.checked) { if (!arr.includes(f.id)) arr.push(f.id); }
+      else { const i = arr.indexOf(f.id); if (i>-1) arr.splice(i,1); }
+      S.checkedFlags[S.emailIdx] = arr;
+      saveS();
+    });
+  });
+}
+
+function setVerdict(v) {
+  S.verdicts[S.emailIdx] = v;
+  document.getElementById("vbtn-ph").className = "vbtn ph" + (v==="phishing"?" sel":"");
+  document.getElementById("vbtn-le").className = "vbtn le" + (v==="legitimate"?" sel":"");
+  const em = EMAILS[S.emailIdx];
+  if (v === "phishing" && em.flags.length > 0) renderFlags(em);
+  else document.getElementById("rf-section").classList.add("hidden");
+  document.getElementById("c1-done-count").textContent = Object.keys(S.verdicts).length;
+  saveS();
+}
+
+function goPrev() { if (S.emailIdx > 0) { S.emailIdx--; renderEmail(); } }
+function goNext() { if (S.emailIdx < 4) { S.emailIdx++; renderEmail(); } }
+
+function submitC1() {
+  if (S.c1Submitted) return;
+  let score = 0;
+  EMAILS.forEach((em, i) => {
+    const v = S.verdicts[i];
+    if (!v) return;
+    if (v === em.verdict) score += 2;
+    if (v === "phishing" && em.flags.length > 0) {
+      const checked = S.checkedFlags[i] || [];
+      em.flags.forEach(f => { if (checked.includes(f.id)) score++; });
+    }
+  });
+  S.c1Score = score;
+  S.c1Submitted = true;
+  document.getElementById("c1-body").classList.add("hidden");
+  document.getElementById("c1-done").classList.remove("hidden");
+  document.getElementById("c1-pts").textContent = "+" + score + " pts";
+  confetti(50);
+  updateScoreboard();
+  checkDone();
+  saveS();
+}
+
+// ──────────────────────────────────────────────────────────────
+// CHALLENGES 2 / 3 / 4 — FLAG SUBMISSION
+// ──────────────────────────────────────────────────────────────
+function submitFlag(n) {
+  const inp = document.getElementById("fi" + n);
+  const fb  = document.getElementById("fb" + n);
+  const val = inp.value.trim();
+  const pts = n===2?25:n===3?25:20;
+
+  if (val.toUpperCase() === CORRECT_FLAGS[n].toUpperCase()) {
+    inp.className = "flag-in ok";
+    fb.innerHTML = `<div class="fb fb-ok">🎉 Correct! Flag accepted — +${pts} points!</div>`;
+    if (n===2) S.c2Solved = true;
+    if (n===3) S.c3Solved = true;
+    if (n===4) S.c4Solved = true;
+    document.getElementById("c"+n+"-body").classList.add("hidden");
+    document.getElementById("c"+n+"-done").classList.remove("hidden");
+    confetti(50);
+    updateScoreboard();
+    checkDone();
+    saveS();
+  } else {
+    inp.className = "flag-in bad";
+    fb.innerHTML = `<div class="fb fb-bad">❌ Incorrect flag. Check your work and try again.</div>`;
+    setTimeout(() => { inp.className = "flag-in"; }, 900);
+  }
+}
+
+// ──────────────────────────────────────────────────────────────
+// SCOREBOARD
+// ──────────────────────────────────────────────────────────────
+function updateScoreboard() {
+  document.getElementById("sc-name").textContent = S.name || "—";
+  const c1 = S.c1Score, c2 = S.c2Solved?25:0, c3 = S.c3Solved?25:0, c4 = S.c4Solved?20:0;
+  const tot = c1+c2+c3+c4;
+
+  function upd(id, score, max, solved) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.textContent = score+"/"+max;
+    el.className = "badge " + ((solved||score>0)?"badge-earn":"badge-pend");
+  }
+  upd("sc1", c1, 30, S.c1Submitted);
+  upd("sc2", c2, 25, S.c2Solved);
+  upd("sc3", c3, 25, S.c3Solved);
+  upd("sc4", c4, 20, S.c4Solved);
+  document.getElementById("sc-total").textContent = tot;
+
+  const done = [S.c1Submitted, S.c2Solved, S.c3Solved, S.c4Solved].filter(Boolean).length;
+  document.getElementById("prog-fill").style.width = (done/4*100)+"%";
+  document.getElementById("prog-text").textContent = done + " / 4 Completed";
+}
+
+function checkDone() {
+  if (S.c1Submitted && S.c2Solved && S.c3Solved && S.c4Solved) {
+    if (!S.finishTime) { S.finishTime = new Date().toISOString(); saveS(); }
+    const el = document.getElementById("congrats");
+    el.style.display = "block";
+    document.getElementById("congrats-name").textContent = S.name;
+    document.getElementById("congrats-score").textContent = S.c1Score + 25 + 25 + 20;
+    confetti(120);
+  }
+}
+
+// ──────────────────────────────────────────────────────────────
+// CONFETTI
+// ──────────────────────────────────────────────────────────────
+function confetti(n) {
+  const cols = ["#E94560","#1F6FEB","#FFD700","#28a745","#FF8C00","#9B59B6","#00BFFF"];
+  for (let i = 0; i < n; i++) {
+    setTimeout(() => {
+      const el = document.createElement("div");
+      el.className = "cf";
+      el.style.cssText = `left:${Math.random()*100}vw;top:-20px;width:${Math.random()*10+5}px;height:${Math.random()*10+5}px;background:${cols[Math.floor(Math.random()*cols.length)]};animation-duration:${Math.random()*2+1.5}s`;
+      document.body.appendChild(el);
+      setTimeout(() => el.remove(), 3600);
+    }, Math.random() * 600);
+  }
+}
+
+// ──────────────────────────────────────────────────────────────
+// LEADERBOARD
+// ──────────────────────────────────────────────────────────────
+let lbTimer = null, lbSec = 10;
+
+async function showLB() {
+  document.getElementById("student-view").style.display = "none";
+  document.getElementById("lb-view").style.display = "block";
+  await doRefreshLB();
+  lbSec = 10;
+  if (lbTimer) clearInterval(lbTimer);
+  lbTimer = setInterval(() => {
+    lbSec--;
+    document.getElementById("ref-ind").textContent = "Auto-refreshes in "+lbSec+"s";
+    if (lbSec <= 0) { lbSec = 10; doRefreshLB(); }
+  }, 1000);
+}
+
+function hideLB() {
+  clearInterval(lbTimer); lbTimer = null;
+  document.getElementById("lb-view").style.display = "none";
+  document.getElementById("student-view").style.display = "block";
+}
+
+async function doRefreshLB() {
+  lbSec = 10;
+  document.getElementById("ref-ind").textContent = "Auto-refreshes in 10s";
+  if (sbReady) await refreshRemoteLB();
+  const lb = getLB();
+  const rows = Object.values(lb).sort((a,b) => {
+    if (b.total !== a.total) return b.total - a.total;
+    if (a.finishTime && b.finishTime) return new Date(a.finishTime)-new Date(b.finishTime);
+    if (a.finishTime) return -1;
+    if (b.finishTime) return 1;
+    return 0;
+  });
+  document.getElementById("lb-count").textContent = rows.length;
+  const body = document.getElementById("lb-body");
+  if (!rows.length) {
+    body.innerHTML = '<tr><td colspan="9" style="color:#aaa;padding:30px">No participants yet. Waiting for students to join…</td></tr>';
+    return;
+  }
+  const rowCls = ["gold","silver","bronze"];
+  const badgeCls = ["r1","r2","r3","rN"];
+  body.innerHTML = rows.map((r,i) => {
+    const rank = i+1;
+    const rc = rank<=3 ? rowCls[rank-1] : "";
+    const bc = rank<=3 ? badgeCls[rank-1] : "rN";
+    const ft = r.finishTime ? new Date(r.finishTime).toLocaleTimeString() : "—";
+    const status = r.done ? '<span style="color:#28a745;font-weight:600">🏆 Finished</span>' : '<span style="color:#FF8C00;font-weight:600">⏳ In Progress</span>';
+    const sc = v => v>0 ? `<span style="color:#28a745;font-weight:600">${v}</span>` : `<span style="color:#ccc">0</span>`;
+    return `<tr class="${rc}">
+      <td><span class="rank-badge ${bc}">${rank}</span></td>
+      <td style="text-align:left;font-weight:600">${esc(r.name)}</td>
+      <td>${sc(r.c1)}</td><td>${sc(r.c2)}</td><td>${sc(r.c3)}</td><td>${sc(r.c4)}</td>
+      <td><strong style="font-size:1.05rem;color:#1F6FEB">${r.total}</strong></td>
+      <td style="font-size:.83rem;color:#666">${ft}</td>
+      <td>${status}</td>
+    </tr>`;
+  }).join("");
+}
+
+function esc(s) {
+  return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+}
+
+// ──────────────────────────────────────────────────────────────
+// RESTORE ON LOAD
+// ──────────────────────────────────────────────────────────────
+window.addEventListener("load", async () => {
+  await initSupabase();
+  if (window.location.hash === "#leaderboard") { showLB(); return; }
+
+  if (loadS() && S.name) {
+    document.getElementById("student-name").value = S.name;
+    document.getElementById("start-card").style.display = "none";
+    document.getElementById("ctf-content").classList.remove("hidden");
+    renderTimer();
+    if (S.timerSec > 0) startTimer();
+    updateScoreboard();
+    renderEmail();
+    if (S.c2Solved) { document.getElementById("c2-body").classList.add("hidden"); document.getElementById("c2-done").classList.remove("hidden"); }
+    if (S.c3Solved) { document.getElementById("c3-body").classList.add("hidden"); document.getElementById("c3-done").classList.remove("hidden"); }
+    if (S.c4Solved) { document.getElementById("c4-body").classList.add("hidden"); document.getElementById("c4-done").classList.remove("hidden"); }
+    checkDone();
+  }
+});
+
+window.addEventListener("hashchange", () => {
+  if (window.location.hash === "#leaderboard") showLB();
+});
+</script>
+</body>
+</html>
